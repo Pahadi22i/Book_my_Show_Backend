@@ -1,0 +1,6 @@
+.env
+.target
+.jar
+.war
+.log
+.vscode
