@@ -15,7 +15,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 // Hum keh rahe hain: "Frontend (5173) ko saare routes (/**) access karne do"
                 registry.addMapping("/**")
-                        .allowedOrigins("itsmovietime.vercel.app") // React ka URL
+                        .allowedOrigins("https://itsmovietime.vercel.app") // React ka URL
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
