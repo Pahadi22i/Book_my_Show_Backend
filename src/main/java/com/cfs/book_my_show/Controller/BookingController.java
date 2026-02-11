@@ -108,4 +108,6 @@ public class BookingController {
     public ResponseEntity<BookingDto> cancelBooking(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
+
+    
 }

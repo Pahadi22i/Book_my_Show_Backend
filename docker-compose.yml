@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Service 1: MySQL Database 
+  mysqldb:
+    image: mysql:8.0
+    container_name: bms_db_container
+    ports:
+      - "3307:3306" # Maps localhost:3307 -> container:3306 (Avoids conflict if you have local MySQL running)
+    environment:
+      MYSQL_DATABASE: bms_db
+      MYSQL_ROOT_PASSWORD: Pahadi@18  # This sets the password for the database inside Docker
+    volumes:
+      - db_data:/var/lib/mysql # Saves your data so it doesn't disappear when you stop Docker
+    networks:
+      - bms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Service 2: Spring Boot Application
+  app:
+    build: .  # Builds the Dockerfile in the current directory
+    container_name: bms_app_container
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      # CRITICAL: We override localhost with the service name 'mysqldb'
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/bms_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Pahadi@18
+    depends_on:
+      mysqldb:
+        condition: service_healthy # Waits for MySQL to be ready before starting the App
+    networks:
+      - bms-network
+
+# Define a shared network so containers can talk to each other
+networks:
+  bms-network:
+    driver: bridge
+
+# Define a volume to persist database data
+volumes:
+  db_data:
