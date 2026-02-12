@@ -24,8 +24,11 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         .cors(Customizer.withDefaults()) 
         .authorizeHttpRequests(auth -> auth
             // Dono patterns allow karein: /api/movies aur /api/movies/123
-            .requestMatchers("/api/movies", "/api/movies/**").permitAll()
-            .requestMatchers("/api/booking/**", "/api/shows/**", "/api/theaters/**").permitAll()
+            .requestMatchers("/api/movies", "/api/movies/**","/api/users",
+                            "/api/users/**").permitAll()
+            .requestMatchers("/api/booking/**",
+                            "/api/booking", "/api/shows/**", "/api/shows","/api/theaters/**",
+                            "/api/theaters").permitAll()
             .anyRequest().authenticated()
         )
         .httpBasic(Customizer.withDefaults());
@@ -41,8 +44,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
         // Frontend ka URL allow karein
         config.setAllowedOrigins(List.of(
-                "https://itsmovietime.vercel.app" // Live URL
-                // "http://localhost:5173" // Local React URL
+                "https://itsmovietime.vercel.app" ,// Live URL
+                  "http://localhost:5173" // Local React URL
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
