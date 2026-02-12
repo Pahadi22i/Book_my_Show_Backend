@@ -16,19 +16,22 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // In sabhi routes ko PUBLIC kar diya hai
-                        .requestMatchers("/api/movies/**", "/api/booking/**", "/api/shows/**", "/api/theaters/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        // CORS ko Spring Security ke filter chain mein sabse upar rakhna zaroori hai
+        .cors(Customizer.withDefaults()) 
+        .authorizeHttpRequests(auth -> auth
+            // Dono patterns allow karein: /api/movies aur /api/movies/123
+            .requestMatchers("/api/movies", "/api/movies/**").permitAll()
+            .requestMatchers("/api/booking/**", "/api/shows/**", "/api/theaters/**").permitAll()
+            .anyRequest().authenticated()
+        )
+        .httpBasic(Customizer.withDefaults());
 
-        return http.build();
-    }
+    return http.build();
+}
 
     // 🔥 YE SABSE ZAROORI HAI (CORS FIX)
     @Bean
@@ -38,8 +41,8 @@ public class SecurityConfig {
 
         // Frontend ka URL allow karein
         config.setAllowedOrigins(List.of(
-                "https://itsmovietime.vercel.app", // Live URL
-                "http://localhost:5173" // Local React URL
+                "https://itsmovietime.vercel.app" // Live URL
+                // "http://localhost:5173" // Local React URL
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

@@ -7,6 +7,7 @@ com\cfs\book_my_show\Repository\UserRepository.class
 com\cfs\book_my_show\DTO\UserDto.class
 com\cfs\book_my_show\Model\Booking.class
 com\cfs\book_my_show\Model\User.class
+com\cfs\book_my_show\Config\SecurityConfig.class
 com\cfs\book_my_show\Controller\ShowController.class
 com\cfs\book_my_show\DTO\ShowDto.class
 com\cfs\book_my_show\Service\UserService.class
@@ -15,7 +16,6 @@ com\cfs\book_my_show\Exceptions\GlobalExceptionHandler.class
 com\cfs\book_my_show\Model\Payment.class
 com\cfs\book_my_show\Service\BookingService.class
 com\cfs\book_my_show\Service\TheaterService.class
-com\cfs\book_my_show\Config\CorsConfig$1.class
 com\cfs\book_my_show\Controller\MoviesController.class
 com\cfs\book_my_show\DTO\ScreenDto.class
 com\cfs\book_my_show\Repository\ShowSeatRepository.class
@@ -27,7 +27,6 @@ com\cfs\book_my_show\DTO\PaymentDto.class
 com\cfs\book_my_show\Exceptions\SeatUnavailableExapction.class
 com\cfs\book_my_show\Exceptions\ResourseNotFound.class
 com\cfs\book_my_show\Model\Show.class
-com\cfs\book_my_show\Config\CorsConfig.class
 com\cfs\book_my_show\Service\MovieService.class
 com\cfs\book_my_show\Repository\ScreenRepository.class
 com\cfs\book_my_show\Model\Theater.class

@@ -1,5 +1,5 @@
 C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\BookMyShowApplication.java
-C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\Config\CorsConfig.java
+C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\Config\SecurityConfig.java
 C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\Controller\BookingController.java
 C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\Controller\MoviesController.java
 C:\Users\deven\Desktop\Book my show\Backend\src\main\java\com\cfs\book_my_show\Controller\ShowController.java
