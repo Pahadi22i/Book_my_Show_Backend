@@ -16,43 +16,45 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        // CORS ko Spring Security ke filter chain mein sabse upar rakhna zaroori hai
-        .cors(Customizer.withDefaults()) 
-        .authorizeHttpRequests(auth -> auth
-            // Dono patterns allow karein: /api/movies aur /api/movies/123
-            .requestMatchers("/api/movies", "/api/movies/**","/api/users",
-                            "/api/users/**").permitAll()
-            .requestMatchers("/api/bookings/**",
-                            "/api/bookings", "/api/shows/**", "/api/shows","/api/theaters/**",
-                            "/api/theaters").permitAll()
-            .anyRequest().authenticated()
-        )
-        .httpBasic(Customizer.withDefaults());
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                // CORS ko Spring Security ke filter chain mein sabse upar rakhna zaroori hai
+                                .cors(Customizer.withDefaults())
+                                .authorizeHttpRequests(auth -> auth
+                                                // Dono patterns allow karein: /api/movies aur /api/movies/123
+                                                .requestMatchers("/api/movies", "/api/movies/**", "/api/users",
+                                                                "/api/users/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/bookings/**",
+                                                                "/api/bookings", "/api/shows/**", "/api/shows",
+                                                                "/api/theaters/**",
+                                                                "/api/theaters")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .httpBasic(Customizer.withDefaults());
 
-    return http.build();
-}
+                return http.build();
+        }
 
-    // 🔥 YE SABSE ZAROORI HAI (CORS FIX)
-    @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
+        // 🔥 YE SABSE ZAROORI HAI (CORS FIX)
+        @Bean
+        public CorsFilter corsFilter() {
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                CorsConfiguration config = new CorsConfiguration();
 
-        // Frontend ka URL allow karein
-        config.setAllowedOrigins(List.of(
-                "https://itsmovietime.vercel.app" ,// Live URL
-                  "http://localhost:5173" // Local React URL
-        ));
+                // Frontend ka URL allow karein
+                config.setAllowedOrigins(List.of(
+                                "https://itsmovietime.vercel.app", // Live URL
+                                "http://localhost:5173" // Local React URL
+                ));
 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
 
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
+                source.registerCorsConfiguration("/**", config);
+                return new CorsFilter(source);
+        }
 }
