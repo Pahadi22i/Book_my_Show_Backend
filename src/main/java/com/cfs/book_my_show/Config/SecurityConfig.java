@@ -10,7 +10,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays; // Arrays import karein
 import java.util.List;
 
 @Configuration
@@ -23,17 +22,17 @@ public class SecurityConfig {
                 // 1. CSRF Disable
                 .csrf(csrf -> csrf.disable())
 
-                // 2. CORS Activate (Sabse pehle ye run hoga)
+                // 2. CORS Activate
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 3. Permissions
                 .authorizeHttpRequests(auth -> auth
-                        // OPTIONS requests ko allow karein (Preflight check ke liye zaroori hai)
+                        // OPTIONS call (Pre-flight) ko hamesha allow karein
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Public Endpoints
-                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll() // Movies fetch karna free hai
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
 
                         // Baaki sab Secured
                         .anyRequest().authenticated())
@@ -46,15 +45,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ FIX: Dono versions add karein (Slash ke sath aur bina Slash ke)
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://itsmovietime.vercel.app", // Bina slash
-                "https://itsmovietime.vercel.app/", // Slash ke sath (Zaroori hai)
-                "http://localhost:5173" // Local testing
-        ));
+        // 🔥 MAGIC FIX: 'AllowedOrigins' ki jagah 'AllowedOriginPatterns' use karein
+        // Ye credentials ke saath bhi '*' (All URLs) ko support karta hai.
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+
+        // Credentials (Cookies/Auth Headers) allow karein
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
