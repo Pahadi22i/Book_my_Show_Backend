@@ -26,8 +26,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             // Dono patterns allow karein: /api/movies aur /api/movies/123
             .requestMatchers("/api/movies", "/api/movies/**","/api/users",
                             "/api/users/**").permitAll()
-            .requestMatchers("/api/booking/**",
-                            "/api/booking", "/api/shows/**", "/api/shows","/api/theaters/**",
+            .requestMatchers("/api/bookings/**",
+                            "/api/bookings", "/api/shows/**", "/api/shows","/api/theaters/**",
                             "/api/theaters").permitAll()
             .anyRequest().authenticated()
         )
