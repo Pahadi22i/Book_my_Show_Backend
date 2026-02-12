@@ -2,7 +2,7 @@ package com.cfs.book_my_show.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // Ye import zaroori hai
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -10,6 +10,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays; // Arrays import karein
 import java.util.List;
 
 @Configuration
@@ -19,23 +20,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. CSRF Disable (API ke liye zaroori)
+                // 1. CSRF Disable
                 .csrf(csrf -> csrf.disable())
 
-                // 2. CORS Configuration ko link karein
+                // 2. CORS Activate (Sabse pehle ye run hoga)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // 3. Rules set karein
+                // 3. Permissions
                 .authorizeHttpRequests(auth -> auth
-                        // GET requests (Movies dekhna) sabke liye allowed hai (Public)
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        // OPTIONS requests ko allow karein (Preflight check ke liye zaroori hai)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Login, Register endpoints bhi public hone chahiye
+                        // Public Endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll() // Movies fetch karna free hai
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // Baaki sab (Add/Delete/Update) ke liye Password chahiye
+                        // Baaki sab Secured
                         .anyRequest().authenticated())
-                // 4. Basic Auth (Popup) enable karein
                 .httpBasic(org.springframework.security.config.Customizer.withDefaults());
 
         return http.build();
@@ -45,19 +46,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Frontend URLs allow karein
-        configuration.setAllowedOrigins(List.of(
-                "https://itsmovietime.vercel.app", // Aapka Live App
-                "http://localhost:5173" // Aapka Local Test App
+        // ✅ FIX: Dono versions add karein (Slash ke sath aur bina Slash ke)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://itsmovietime.vercel.app", // Bina slash
+                "https://itsmovietime.vercel.app/", // Slash ke sath (Zaroori hai)
+                "http://localhost:5173" // Local testing
         ));
 
-        // Methods allow karein
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Headers allow karein
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-
-        // Credentials allow karein
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
