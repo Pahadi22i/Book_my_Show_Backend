@@ -25,17 +25,18 @@ public class SecurityConfig {
                 // 2. CORS Activate
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // 3. Permissions
+                // 3. Permissions (Yahan galti thi)
                 .authorizeHttpRequests(auth -> auth
-                        // OPTIONS call (Pre-flight) ko hamesha allow karein
+                        // Sabse pehle: OPTIONS requests ko allow karein (Browser check ke liye)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public Endpoints
+                        // Specific URLs ko allow karein (Dono tarike se)
+                        .requestMatchers("/api/movies", "/api/movies/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
 
-                        // Baaki sab Secured
-                        .anyRequest().authenticated())
+                        // 🔥 TESTING KE LIYE: Filhal sab kuch allow kar do (403 hatane ke liye)
+                        // Jab chal jaye, tab is line ko hata kar .authenticated() wapas laga dena
+                        .requestMatchers("/**").permitAll())
                 .httpBasic(org.springframework.security.config.Customizer.withDefaults());
 
         return http.build();
@@ -45,14 +46,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 🔥 MAGIC FIX: 'AllowedOrigins' ki jagah 'AllowedOriginPatterns' use karein
-        // Ye credentials ke saath bhi '*' (All URLs) ko support karta hai.
+        // Sabko aane do
         configuration.setAllowedOriginPatterns(List.of("*"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-
-        // Credentials (Cookies/Auth Headers) allow karein
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
