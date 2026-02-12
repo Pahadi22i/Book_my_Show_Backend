@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter; // Import Zaroori hai
 
 import java.util.List;
 
@@ -19,42 +19,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. CSRF Disable
                 .csrf(csrf -> csrf.disable())
+                // Note: Humne yahan .cors() hata diya hai kyunki hum niche alag bean use kar
+                // rahe hain
 
-                // 2. CORS Activate
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // 3. Permissions (Yahan galti thi)
                 .authorizeHttpRequests(auth -> auth
-                        // Sabse pehle: OPTIONS requests ko allow karein (Browser check ke liye)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Specific URLs ko allow karein (Dono tarike se)
-                        .requestMatchers("/api/movies", "/api/movies/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        // 🔥 TESTING KE LIYE: Filhal sab kuch allow kar do (403 hatane ke liye)
-                        // Jab chal jaye, tab is line ko hata kar .authenticated() wapas laga dena
-                        .requestMatchers("/**").permitAll())
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Pre-flight checks
+                        .requestMatchers("/api/movies", "/api/movies/**").permitAll() // Movies Public
+                        .requestMatchers("/api/auth/**").permitAll() // Auth Public
+                        .anyRequest().authenticated() // Baaki sab secured
+                )
                 .httpBasic(org.springframework.security.config.Customizer.withDefaults());
 
         return http.build();
     }
 
+    // 🔥 BRAHMASTRA FIX: Security se alag CORS Filter
+    // Ye method Security se pehle run hota hai aur Headers inject kar deta hai
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // Sabko aane do
-        configuration.setAllowedOriginPatterns(List.of("*"));
-
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
+    public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+        config.setAllowedOriginPatterns(List.of("*")); // Sab kuch allow
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
