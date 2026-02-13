@@ -14,7 +14,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -24,23 +23,21 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
-
-                                // 1. CORS ko default rakhein (Kyunki hum niche Custom Filter use kar rahe hain)
-                                .cors(Customizer.withDefaults())
+                                .cors(Customizer.withDefaults()) // Niche wala custom filter handle karega
 
                                 .authorizeHttpRequests(auth -> auth
-                                                // 🔥 FIX: OPTIONS requests ko hamesha allow karein (Pre-flight check ke
-                                                // liye)
+                                                // 1. OPTIONS (Pre-flight) requests allow karein
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                                                // Public URLs
-                                                .requestMatchers(
-                                                                "/api/movies/**",
-                                                                "/api/users/**",
-                                                                "/api/bookings/**",
-                                                                "/api/shows/**",
-                                                                "/api/theaters/**")
-                                                .permitAll()
+                                                // 2. 🔥 RAM-BAAN ILAJ (Master Fix):
+                                                // "/api/" se start hone wale DUNIYA KE SABHI URLs ko allow kar do.
+                                                // Ab aapko alag-alag users, bookings likhne ki zaroorat nahi hai.
+                                                .requestMatchers("/api/**").permitAll()
+
+                                                // Agar aapko specific hi rakhna hai to aise likhein (Dono pattern
+                                                // zaroori hain):
+                                                // .requestMatchers("/api/users", "/api/users/**").permitAll()
+                                                // .requestMatchers("/api/bookings", "/api/bookings/**").permitAll()
 
                                                 .anyRequest().authenticated())
                                 .httpBasic(Customizer.withDefaults());
@@ -48,23 +45,22 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        // 🔥 SUPER FIX: FilterRegistrationBean use karein
-        // Ye CORS Filter ko Spring Security se PEHLE chalayega
+        // 🔥 CORS Filter (Highest Priority)
         @Bean
         public FilterRegistrationBean<CorsFilter> corsFilter() {
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 CorsConfiguration config = new CorsConfiguration();
 
-                // 1. Frontend URLs
+                // 1. Frontend URLs (Apne production URL check kar lena)
                 config.setAllowedOrigins(Arrays.asList(
                                 "https://itsmovietime.vercel.app",
                                 "http://localhost:5173",
                                 "http://localhost:3000"));
 
-                // 2. Methods: "*" use karein taki OPTIONS, GET, POST sab allowed ho
-                config.setAllowedMethods(Arrays.asList("*"));
+                // 2. Allow ALL Methods
+                config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-                // 3. Headers: "*" use karein (Browser pre-flight me alag headers bhejta hai)
+                // 3. Allow ALL Headers
                 config.setAllowedHeaders(Arrays.asList("*"));
 
                 // 4. Credentials
@@ -72,9 +68,8 @@ public class SecurityConfig {
 
                 source.registerCorsConfiguration("/**", config);
 
-                // 🔥 HIGHEST PRECEDENCE set karna zaroori hai
                 FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
-                bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+                bean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Security se pehle chalega
                 return bean;
         }
 }
