@@ -1,14 +1,17 @@
 package com.cfs.book_my_show.Config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,67 +23,58 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                // 1. CSRF Disable: Iske bina POST, PUT, DELETE requests block ho jati hain
                                 .csrf(csrf -> csrf.disable())
 
-                                // 2. CORS Config: Niche wala bean use karega
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // 1. CORS ko default rakhein (Kyunki hum niche Custom Filter use kar rahe hain)
+                                .cors(Customizer.withDefaults())
 
-                                // 3. Authorization Rules
                                 .authorizeHttpRequests(auth -> auth
+                                                // 🔥 FIX: OPTIONS requests ko hamesha allow karein (Pre-flight check ke
+                                                // liye)
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                                                // Public URLs
                                                 .requestMatchers(
-                                                                // Movies APIs (Get, Add, Delete sab allowed)
-                                                                "/api/movies",
                                                                 "/api/movies/**",
-
-                                                                // Users APIs (Login, Signup, Get Profile allowed)
-                                                                "/api/users",
                                                                 "/api/users/**",
-
-                                                                // Bookings APIs (Book ticket, Get history allowed)
-                                                                "/api/bookings",
                                                                 "/api/bookings/**",
-
-                                                                // Shows APIs (Create show, Get seats allowed)
-                                                                "/api/shows",
                                                                 "/api/shows/**",
-
-                                                                // Theaters APIs
-                                                                "/api/theaters",
                                                                 "/api/theaters/**")
-                                                .permitAll() // 🔥 Iska matlab: "Bina Password ke aane do"
+                                                .permitAll()
 
-                                                // Baki koi aur URL ho to login maang lena (Safety ke liye)
                                                 .anyRequest().authenticated())
                                 .httpBasic(Customizer.withDefaults());
 
                 return http.build();
         }
 
-        // 🔥 CORS CONFIGURATION (Frontend Connection ke liye)
+        // 🔥 SUPER FIX: FilterRegistrationBean use karein
+        // Ye CORS Filter ko Spring Security se PEHLE chalayega
         @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
+        public FilterRegistrationBean<CorsFilter> corsFilter() {
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 CorsConfiguration config = new CorsConfiguration();
 
-                // 1. Allowed Origins (Frontend URLs)
+                // 1. Frontend URLs
                 config.setAllowedOrigins(Arrays.asList(
-                                "https://itsmovietime.vercel.app", // Live React App
-                                "http://localhost:5173", // Local React App
-                                "http://localhost:3000" // Kabhi kabhi React 3000 par chalta hai
-                ));
+                                "https://itsmovietime.vercel.app",
+                                "http://localhost:5173",
+                                "http://localhost:3000"));
 
-                // 2. Allowed Methods (Ye line ensure karti hai ki DELETE/PUT/POST sab chalein)
-                config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                // 2. Methods: "*" use karein taki OPTIONS, GET, POST sab allowed ho
+                config.setAllowedMethods(Arrays.asList("*"));
 
-                // 3. Allowed Headers
-                config.setAllowedHeaders(
-                                Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+                // 3. Headers: "*" use karein (Browser pre-flight me alag headers bhejta hai)
+                config.setAllowedHeaders(Arrays.asList("*"));
 
-                // 4. Cookies Allow
+                // 4. Credentials
                 config.setAllowCredentials(true);
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", config);
-                return source;
+
+                // 🔥 HIGHEST PRECEDENCE set karna zaroori hai
+                FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+                bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+                return bean;
         }
 }
