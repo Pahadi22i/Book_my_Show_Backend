@@ -13,57 +13,53 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-        // 1. 🔥 SECURITY FILTER CHAIN (Sirf non-API routes ke liye fallback)
+        // 1. 🔥 SECURITY FILTER CHAIN (Basic setup to disable defaults)
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                                .anyRequest().authenticated() // Baki sab secure
+                                                .anyRequest().authenticated() // Fallback rule
                                 )
-                                .httpBasic(basic -> basic.disable())
-                                .formLogin(login -> login.disable());
+                                .httpBasic(basic -> basic.disable()) // Login Popup Disable
+                                .formLogin(login -> login.disable()); // Form Login Disable
 
                 return http.build();
         }
 
         // 2. 🔥 WEB SECURITY CUSTOMIZER (The Real Fix for Login Popup)
         // Ye URLs Security Check se poori tarah BAHAR ho jayenge.
-        // Spring Security in URLs ko touch bhi nahi karega -> No Password Popup!
         @Bean
         public WebSecurityCustomizer webSecurityCustomizer() {
                 return (web) -> web.ignoring()
                                 .requestMatchers("/api/**");
         }
 
-        // 3. 🔥 EXTERNAL CORS FILTER (The Real Fix for CORS)
-        // Chunki humne Security Bypass kar di hai, isliye Security Chain wala CORS kaam
-        // nahi karega.
-        // Humein ye EXTERNAL filter chahiye jo sabse pehle chale.
+        // 3. 🔥 EXTERNAL CORS FILTER (The Real Fix for CORS Error)
+        // Ye filter sabse pehle chalega aur Browser ko headers dega
         @Bean
         public FilterRegistrationBean<CorsFilter> corsFilter() {
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 CorsConfiguration config = new CorsConfiguration();
 
-                // 1. Frontend URLs
+                // ✅ Frontend URLs (Live + Local)
                 config.setAllowedOrigins(Arrays.asList(
                                 "https://itsmovietime.vercel.app",
                                 "http://localhost:5173",
                                 "http://localhost:3000"));
 
-                // 2. Methods
+                // ✅ Allow All Methods
                 config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-                // 3. Headers (Wildcard use karein safe side ke liye)
+                // ✅ Allow All Headers
                 config.setAllowedHeaders(Arrays.asList("*"));
 
-                // 4. Credentials
+                // ✅ Allow Credentials
                 config.setAllowCredentials(true);
 
                 source.registerCorsConfiguration("/**", config);
