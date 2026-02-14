@@ -91,8 +91,19 @@ public class BookingController {
     // 4. Get All Bookings (This is what you asked for)
     // Endpoint: GET /api/bookings
     @GetMapping
-    public ResponseEntity<List<BookingDto>> getAllBookings() {
-        return ResponseEntity.ok(bookingService.getAllBookings());
+    public ResponseEntity<?> getAllBookings() {
+        try {
+            System.out.println("🔥🔥 Fetching all bookings...");
+            List<BookingDto> bookings = bookingService.getAllBookings();
+            System.out.println("✅ Bookings found: " + bookings.size());
+            return ResponseEntity.ok(bookings);
+        } catch (Exception e) {
+            // Error ko console me print karo
+            e.printStackTrace();
+            // Browser ko Login page ki jagah asli error dikhao
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("🔥 INTERNAL SERVER ERROR: " + e.getMessage());
+        }
     }
 
     // 5. Get Bookings by User ID

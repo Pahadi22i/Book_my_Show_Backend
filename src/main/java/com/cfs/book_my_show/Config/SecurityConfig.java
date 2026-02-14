@@ -4,6 +4,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -18,53 +19,59 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-        // 1. 🔥 SECURITY FILTER CHAIN (Basic setup to disable defaults)
+        // 1. 🔥 SECURITY FILTER CHAIN
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                                .anyRequest().authenticated() // Fallback rule
+                                                .anyRequest().authenticated() // Baki sab secure
                                 )
-                                .httpBasic(basic -> basic.disable()) // Login Popup Disable
-                                .formLogin(login -> login.disable()); // Form Login Disable
+                                .httpBasic(basic -> basic.disable())
+                                .formLogin(login -> login.disable());
 
                 return http.build();
         }
 
-        // 2. 🔥 WEB SECURITY CUSTOMIZER (The Real Fix for Login Popup)
-        // Ye URLs Security Check se poori tarah BAHAR ho jayenge.
+        // 2. 🔥 WEB SECURITY CUSTOMIZER (Nuclear Fix)
+        // Yaha hum bata rahe hain ki kin URLs ko Security Check se BAHAR rakhna hai.
         @Bean
         public WebSecurityCustomizer webSecurityCustomizer() {
                 return (web) -> web.ignoring()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**") // Pre-flight requests allow
+
+                                // 🔥 CRITICAL FIX: Error page ko allow karein.
+                                // Agar ye nahi kiya, to jab bhi code fategame, login popup aa jayega.
+                                .requestMatchers("/error")
+
+                                // 🔥 Aapki demand ke mutabik saari APIs ki list:
+                                .requestMatchers("/api/movies", "/api/movies/**")
+                                .requestMatchers("/api/bookings", "/api/bookings/**")
+                                .requestMatchers("/api/users", "/api/users/**")
+                                .requestMatchers("/api/shows", "/api/shows/**")
+                                .requestMatchers("/api/theaters", "/api/theaters/**")
+
+                                // Safety Net: /api/ ke baad kuch bhi ho, allow karo
                                 .requestMatchers("/api/**");
         }
 
-        // 3. 🔥 EXTERNAL CORS FILTER (The Real Fix for CORS Error)
-        // Ye filter sabse pehle chalega aur Browser ko headers dega
+        // 3. 🔥 EXTERNAL CORS FILTER (Highest Priority)
         @Bean
         public FilterRegistrationBean<CorsFilter> corsFilter() {
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 CorsConfiguration config = new CorsConfiguration();
 
-                // ✅ Frontend URLs (Live + Local)
                 config.setAllowedOrigins(Arrays.asList(
                                 "https://itsmovietime.vercel.app",
                                 "http://localhost:5173",
                                 "http://localhost:3000"));
 
-                // ✅ Allow All Methods
                 config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-                // ✅ Allow All Headers
                 config.setAllowedHeaders(Arrays.asList("*"));
-
-                // ✅ Allow Credentials
                 config.setAllowCredentials(true);
 
                 source.registerCorsConfiguration("/**", config);
 
-                // 🔥 HIGHEST PRECEDENCE: Ye Security se pehle chalega
                 FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
                 bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
                 return bean;
