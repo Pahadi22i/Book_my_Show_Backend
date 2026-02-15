@@ -1,7 +1,5 @@
+target/
+*.jar
+*.war
 .env
-.jar
-.target
-.war
-.vscode
-``
-
+.vscode/
