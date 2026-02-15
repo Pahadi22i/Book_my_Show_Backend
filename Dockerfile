@@ -1,15 +1,12 @@
-# Use an official OpenJDK 21 image (Lightweight Slim version)
-FROM eclipse-temurin:21-jdk
-
-# Set the working directory inside the container
+# Stage 1: Build the application (Naya JAR banayenge)
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy the built jar file into the container
-# This assumes you have run 'mvn clean package' before building the docker image
-COPY target/book_my_show-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the port your application runs on (from your application.properties)
-EXPOSE 8081
-
-# Run the jar file
+# Stage 2: Run the application (Bana hua JAR chalayenge)
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
+# Yahan hum naya bana hua JAR copy kar rahe hain
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
